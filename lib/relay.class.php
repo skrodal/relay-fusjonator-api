@@ -15,21 +15,19 @@
 	class Relay {
 		protected $config;
 		private $DEBUG = false;
+		private $relaySQL;
 
 		function __construct($config) {
 			$this->config = $config;
+			$this->relaySQL = new RelaySQLConnection($config);
 		}
 
 		########################################################
 		# FUNCTIONS ACCESSIBLE BY ROUTES
 		########################################################
 
-
-		// TODO: Use as first test!
-		// 400 == Bad Request
 		public function getRelayVersion() {
-			Response::error(400, 'TEST ERROR RESPONSE FOR CLIENT...');
-			// return (string)$apiCommonInfo->common->version;
+			$this->relaySQL->query("SELECT * FROM tblVersion")[0];
 		}
 
 		/**
