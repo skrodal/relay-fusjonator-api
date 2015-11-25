@@ -6,6 +6,7 @@
 	 * @since  November 2015
 	 */
 
+	require_once($BASE . '/lib/db/relaysqlconnection.class.php');
 
 	// Some calls take a long while so increase timeout limit from def. 30
 	set_time_limit(300);    // 5 mins
