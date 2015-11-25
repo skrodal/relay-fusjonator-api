@@ -38,7 +38,6 @@
 			if(mssql_num_rows($query) > 0) {
 				while($row = mssql_fetch_assoc($query)) {
 					$response[] = $row;
-					// Utils::log(print_r($row, true), __CLASS__ , __FUNCTION__, __LINE__);
 				}
 			}
 			// Free the query result
@@ -82,6 +81,5 @@
 			if($this->connection !== false) {
 				mssql_close($this->connection);
 			}
-			Utils::log("DB CLOSED");
 		}
 	}
