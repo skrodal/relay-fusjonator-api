@@ -28,7 +28,7 @@
 		########################################################
 
 		public function getRelayVersion() {
-			$this->relaySQL->query("SELECT * FROM tblVersion")[0];
+			return $this->relaySQL->query("SELECT * FROM tblVersion")[0];
 		}
 
 		/**
