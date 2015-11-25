@@ -104,7 +104,7 @@
 		sanitizeInput();
 		call_user_func_array($match['target'], $match['params']);
 	} else {
-		Response::error(404, $_SERVER["SERVER_PROTOCOL"] . " The requested resource [" . $match['target'] . "] could not be found.");
+		Response::error(404, $_SERVER["SERVER_PROTOCOL"] . " The requested resource [" . $_SERVER['PATH_INFO'] . "] could not be found.");
 	}
 	// ---------------------- /.MATCH AND EXECUTE REQUESTED ROUTE ----------------------
 
