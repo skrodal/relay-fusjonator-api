@@ -109,19 +109,8 @@
 	// ---------------------- /.MATCH AND EXECUTE REQUESTED ROUTE ----------------------
 
 
-	function get_path_info()
-	{
-		if( ! array_key_exists('PATH_INFO', $_SERVER) )
-		{
-			$pos = strpos($_SERVER['REQUEST_URI'], $_SERVER['QUERY_STRING']);
-
-			$asd = substr($_SERVER['REQUEST_URI'], 0, $pos - 2);
-			$asd = substr($asd, strlen($_SERVER['SCRIPT_NAME']) + 1);
-
-			return $asd;
-		}
-		else
-		{
-			return trim($_SERVER['PATH_INFO'], '/');
-		}
+	function get_path_info() {
+		global $API_BASE_PATH;
+		$requestUrl = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+		return substr($requestUrl, strlen($API_BASE_PATH));
 	}
