@@ -96,7 +96,7 @@
 	// -------------------- ./UTILS -------------------- //
 
 
-// ---------------------- MATCH AND EXECUTE REQUESTED ROUTE ----------------------
+	// ---------------------- MATCH AND EXECUTE REQUESTED ROUTE ----------------------
 	$match = $router->match();
 
 	if($match && is_callable($match['target'])) {
@@ -104,8 +104,24 @@
 		sanitizeInput();
 		call_user_func_array($match['target'], $match['params']);
 	} else {
-		Response::error(404, $_SERVER["SERVER_PROTOCOL"] . " The requested resource [" . $_SERVER['PATH_INFO'] . "] could not be found.");
+		Response::error(404, $_SERVER["SERVER_PROTOCOL"] . " The requested resource [" . get_path_info() . "] could not be found.");
 	}
 	// ---------------------- /.MATCH AND EXECUTE REQUESTED ROUTE ----------------------
 
 
+	function get_path_info()
+	{
+		if( ! array_key_exists('PATH_INFO', $_SERVER) )
+		{
+			$pos = strpos($_SERVER['REQUEST_URI'], $_SERVER['QUERY_STRING']);
+
+			$asd = substr($_SERVER['REQUEST_URI'], 0, $pos - 2);
+			$asd = substr($asd, strlen($_SERVER['SCRIPT_NAME']) + 1);
+
+			return $asd;
+		}
+		else
+		{
+			return trim($_SERVER['PATH_INFO'], '/');
+		}
+	}
