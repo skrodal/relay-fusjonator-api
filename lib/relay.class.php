@@ -35,13 +35,6 @@
 		/**
 		 * READ-ONLY
 		 *
-		 * Processes a userlist array received from the client with the following structure:
-		 *
-		 * current_login, new_login
-		 * ..., ...
-		 *
-		 * Run checks to see if any of the two logins already exist in the service. Return an object
-		 * back to the client with info about status for each login (candidates that can/cannot be migrated).
 		 *
 		 * @param $postData
 		 *
@@ -59,7 +52,7 @@
 			// Loop all user pairs in the CSV
 			foreach($userList as $userCurrentAndNew) {
 				// Must be two columns only for each entry
-				if(sizeof($userCurrentAndNew) !== 2) {
+				if(sizeof($userCurrentAndNew) !== 4) {
 					Response::error(400, 'Malformed data structure. Cannot continue.');
 				}
 
