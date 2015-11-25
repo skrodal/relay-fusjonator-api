@@ -19,7 +19,7 @@
 		private $relaySQL;
 
 		function __construct($config) {
-			$this->config = $config;
+			$this->config   = $config;
 			$this->relaySQL = new RelaySQLConnection($config);
 		}
 
@@ -29,12 +29,25 @@
 
 		public function getRelayVersion() {
 			$versionResponse = $this->relaySQL->query("SELECT * FROM tblVersion")[0];
+
 			return $versionResponse['versValue'];
 		}
 
 		/**
 		 * READ-ONLY
 		 *
+		 * Check existence of OLD USERNAME in Relay's database. If it is found, also check for
+		 * existence of new username.
+		 *
+		 * Expects a 2D array, e.g.:
+		 *
+		 * 0: Array[4]
+		 *        0: "borborson@uninett.no"   // OLD USERNAME
+		 *        1: "bor.borson@uninett.no"  // OLD EMAIL
+		 *        2: "borborson@feide.no"     // NEW USERNAME
+		 *        3: "bor.borson@feide.no"    // NEW EMAIL
+		 * 1: Array[4]
+		 *      0: ...
 		 *
 		 * @param $postData
 		 *
@@ -53,9 +66,8 @@
 			foreach($userList as $userCurrentAndNew) {
 				// Must be two columns only for each entry
 				if(sizeof($userCurrentAndNew) !== 4) {
-					Response::error(400, 'Malformed data structure. Cannot continue.');
+					Response::error(400, 'Malformed CSV data structure. Cannot continue.');
 				}
-
 				// Check if old username has an account
 				$currentLoginInfo = $this->_checkUserExists($userCurrentAndNew[0]);
 
@@ -97,27 +109,24 @@
 		private function _checkUserExists($username) {
 			$this->_logger('(BEFORE)', __LINE__, __FUNCTION__);
 			// Lookup account info for requested user
-			$apiUserInfoResponse = $this->callConnectApi(
-				array(
-					'action'       => 'principal-list',
-					'filter-login' => $username
-				)
-			);
+			// TODO - check if it is faster to pull all users with new/old domain in a single query instead
+			// of looping 100s of usernames in individual calls...
+			// $sqlUserInfoResponse = $this->relaySQL->query(SOMETHING HERE);
 			$this->_logger('(AFTER)', __LINE__, __FUNCTION__);
 			// Exit on error
-			if(strcasecmp((string)$apiUserInfoResponse->status['code'], "ok") !== 0) {
-				Response::error(400, 'User lookup failed: ' . $username . ': ' . (string)$apiUserInfoResponse->status['subcode']);
-			}
-			// Ok search, but user does not exist (judged by missing metadata)
-			if(!isset($apiUserInfoResponse->{'principal-list'}->principal)) {
-				return false;
-			}
+			// if(SOME_RESPONSE_NOT OK) {
+			// 	Response::error(400, 'User lookup failed: ' . $username . ': ' . (string)$sqlUserInfoResponse->status['subcode']);
+			// }
+
+			// Ok search, but user does not exist
+			// if(USERNAME_NOT_FOUND) {
+			//	return false;
+			// }
 
 			// Done :-)
 			return array(
-				'principal_id'  => (string)$apiUserInfoResponse->{'principal-list'}->principal['principal-id'],
-				'username'      => (string)$apiUserInfoResponse->{'principal-list'}->principal->login,
-				'response_full' => $apiUserInfoResponse
+				'username' => $username,
+				'email'    => 'email_from_database'
 			);
 		}
 
@@ -127,69 +136,6 @@
 			}
 		}
 
-		/**
-		 * Utility function for AC API calls.
-		 *
-		 * @param array $params
-		 * @param bool  $requireSession
-		 *
-		 * @return bool|SimpleXMLElement
-		 */
-		private function callConnectApi($params = array(), $requireSession = true) {
-
-			if($requireSession) {
-				$params['session'] = $this->getSessionAuthCookie();
-			}
-
-			$url = $this->apiurl . http_build_query($params);
-			$xml = false;
-			try {
-				$xml = simplexml_load_file($url);
-			} catch(Exception $e) {
-				$this->_logger('Failed to get XML', __LINE__, __FUNCTION__);
-				$this->_logger(json_encode($e), __LINE__, __FUNCTION__);
-				Response::error(400, 'API request failed. Could be that the service is unavailable (503)');
-			}
-
-			if(!$xml) {
-				Response::error(400, 'API request failed. Could be that the service is unavailable (503)');
-			}
-			$this->_logger('Got XML response', __LINE__, __FUNCTION__);
-			$this->_logger(json_encode($xml), __LINE__, __FUNCTION__);
-
-			return $xml;
-		}
-
-		/**
-		 * Authenticate API user on AC service and grab returned cookie. If auth already in place, return cookie.
-		 *
-		 * @throws Exception
-		 * @return array
-		 */
-		private function getSessionAuthCookie() {
-			if($this->sessioncookie !== NULL) {
-				$this->_logger('Have cookie, reusing', __LINE__, __FUNCTION__);
-
-				return $this->sessioncookie;
-			}
-
-			$url  = $this->apiurl . 'action=login&login=' . $this->config['connect-api-userid'] . '&password=' . $this->config['connect-api-passwd'];
-			$auth = get_headers($url, 1);
-
-			if(!isset($auth['Set-Cookie'])) {
-				$this->_logger('********** getSessionAuthCookie failed!', __LINE__, __FUNCTION__);
-				Response::error(401, 'Error when authenticating to the Adobe Connect API using client API credentials. Set-Cookie not present in response.');
-			}
-
-			// Extract session cookie
-			$acSessionCookie = substr($auth['Set-Cookie'], strpos($auth['Set-Cookie'], '=') + 1);
-			$acSessionCookie = substr($acSessionCookie, 0, strpos($acSessionCookie, ';'));
-
-			$this->sessioncookie = $acSessionCookie;
-			$this->_logger('Returning new cookie', __LINE__, __FUNCTION__);
-
-			return $this->sessioncookie;
-		}
 
 		/**
 		 * WRITE TO TechSmith Relay DB
@@ -202,40 +148,33 @@
 		public function migrateUserAccounts($postData) {
 			// Get/set POST values
 			$userList = isset($postData['user_list']) ? $postData['user_list'] : false;
-			// Not used (yet)
-			$token = isset($postData['token']) ? $postData['token'] : false;
 			// Check that all required data is here
 			if(!$userList) {
 				Response::error(400, 'Missing one or more required data fields from POST. Cannot continue without required data...');
-			}
-			// Use sessioncookie passed from client
-			if($token !== false) {
-				$this->sessioncookie = $token;
 			}
 			// To be sent back to client...
 			$responseObj = array();
 			// Loop all user pairs in the CSV
 			foreach($userList as $index => $userObj) {
 				// Check for required user info in the object
-				if(!$userObj['current_username'] || !$userObj['new_username'] || !$userObj['principal_id']) {
+				if(!$userObj['current_username'] || !$userObj['current_email'] || !$userObj['new_username'] || !$userObj['new_email']) {
 					Response::error(400, 'Malformed data structure. Cannot continue.');
 				}
-
 				// DO username change
-				$usernameUpdateResponse = $this->_changeUsername($userObj['principal_id'], $userObj['new_username']);
+				$usernameUpdateResponse = $this->_changeUsername($userObj['current_username'], $userObj['new_username'], $userObj['new_email']);
 
 				// If yes, we need to do more, otherwise skip to next user
 				if($usernameUpdateResponse !== false) {
-					$responseObj['ok'][$userObj['current_username']] ['message']                          = 'Brukernavn fusjonert!';
-					$responseObj['ok'][$userObj['current_username']] ['account_info_old']['username']     = $userObj['current_username'];
-					$responseObj['ok'][$userObj['current_username']] ['account_info_old']['principal_id'] = $userObj['principal_id'];
-					$responseObj['ok'][$userObj['current_username']] ['account_info_new']                 = $usernameUpdateResponse;
+					$responseObj['ok'][$userObj['current_username']] ['message']                      = 'Brukernavn fusjonert!';
+					$responseObj['ok'][$userObj['current_username']] ['account_info_old']['username'] = $userObj['current_username'];
+					$responseObj['ok'][$userObj['current_username']] ['account_info_old']['email']    = $userObj['current_email'];
+					$responseObj['ok'][$userObj['current_username']] ['account_info_new']             = $usernameUpdateResponse;
 				} else {
-					$responseObj['problem'][$userObj['current_username']]['message']                           = 'Ukjent problem';
-					$responseObj['problem'][$userObj['current_username']] ['account_info_old']['username']     = $userObj['current_username'];
-					$responseObj['problem'][$userObj['current_username']] ['account_info_old']['principal_id'] = $userObj['principal_id'];
-					$responseObj['problem'][$userObj['current_username']] ['account_info_new']['username']     = $userObj['new_username'];
-					$responseObj['problem'][$userObj['current_username']] ['account_info_new']['principal_id'] = $userObj['principal_id'];
+					$responseObj['problem'][$userObj['current_username']]['message']                       = 'Ukjent problem!';
+					$responseObj['problem'][$userObj['current_username']] ['account_info_old']['username'] = $userObj['current_username'];
+					$responseObj['problem'][$userObj['current_username']] ['account_info_old']['email']    = $userObj['current_email'];
+					$responseObj['problem'][$userObj['current_username']] ['account_info_new']['username'] = $userObj['new_username'];
+					$responseObj['problem'][$userObj['current_username']] ['account_info_new']['email']    = $userObj['new_email'];
 				}
 			}
 
@@ -244,44 +183,31 @@
 		}
 
 
-		// ---------------------------- UTILS ----------------------------
-
 		/**
-		 * Change a username with the supplied principal_id.
+		 * WRITE OP
 		 *
-		 * @param $principalId
+		 * Change username and email
+		 *
+		 * @param $oldUsername
 		 * @param $newUsername
+		 * @param $newEmail
 		 *
 		 * @return array
 		 */
-		private function _changeUsername($principalId, $newUsername) {
+		private function _changeUsername($oldUsername, $newUsername, $newEmail) {
 
 			$this->_logger('(BEFORE)', __LINE__, __FUNCTION__);
 			//Run the update call requested principalId
-			$apiChangeUsernameResponse = $this->callConnectApi(
-				array(
-					'action'       => 'principal-update',
-					'principal-id' => $principalId,
-					'login'        => $newUsername
-				)
-			);
+			// $sqlChangeUsernameResponse = $this->relaySQL->query('SOME_QUERY_TO_CHANGE_USERNAME_AND_EMAIL');
 			$this->_logger('(AFTER)', __LINE__, __FUNCTION__);
 			// Exit on error
-			if(strcasecmp((string)$apiChangeUsernameResponse->status['code'], "ok") !== 0) {
-				Response::error(400, 'User update failed: ' . $newUsername . ' (ID#' . $principalId . '): ' . (string)$apiChangeUsernameResponse->status['subcode']);
+			if(SQL_QUERY_FAILED) {
+				Response::error(400, 'User update failed: ' . $newUsername . ': ' . 'MESSAGE FROM SQL');
 			}
 
-			// NOTE: Poorly documented by Adobe (http://help.adobe.com/en_US/connect/9.0/webservices/WS5b3ccc516d4fbf351e63e3d11a171ddf77-7f54_SP1.html),
-			// but principal-update only returns a status code if the command is *update*. Only when used to *create* a new principal does the endpoint
-			// return metadata for the principal. Hence, we cannot pull info about the updated user from the response; only status code.
-
-			// Given the note above, return the same ID and username as passed to this function. This is correct info, since the status code returned OK.
-
-
 			return array(
-				'principal_id'  => $principalId,
-				'username'      => $newUsername,
-				'response_full' => $apiChangeUsernameResponse
+				'username' => $newUsername,
+				'email'    => $newEmail
 			);
 
 
@@ -293,6 +219,9 @@
 			*/
 
 		}
+
+
+		// ---------------------------- UTILS ----------------------------
 
 		private function _responseToArray($response) {
 			$newArr = Array();
