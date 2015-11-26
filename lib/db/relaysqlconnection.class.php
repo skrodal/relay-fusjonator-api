@@ -68,7 +68,7 @@
 		 */
 		private function getConnection() {
 			//
-			$connection = mssql_connect($this->config['host'], $this->config['user'], $this->config['pass']);
+			$connection = mssql_connect($this->config['host'], $this->config['user_write'], $this->config['pass']);
 			//
 			if(!$connection) {
 				Response::error(500, $_SERVER["SERVER_PROTOCOL"] . ' DB connection failed (SQL).');
