@@ -108,26 +108,33 @@
 		 */
 		private function _checkUserExists($username) {
 			$this->_logger('(BEFORE)', __LINE__, __FUNCTION__);
+
+			// TODO: Check if it is faster to pull all users with new/old domain in a single query instead of looping 100s of usernames in individual calls...
+
 			// Lookup account info for requested user
-			// TODO - check if it is faster to pull all users with new/old domain in a single query instead
-			// of looping 100s of usernames in individual calls...
-			// $sqlUserInfoResponse = $this->relaySQL->query(SOMETHING HERE);
-			$this->_logger('(AFTER)', __LINE__, __FUNCTION__);
+			$sqlUserInfoResponse = $this->relaySQL->query("
+				SELECT userName, userEmail
+				FROM tblUser
+				WHERE userName = '$username'");
+
 			// Exit on error
-			// if(SOME_RESPONSE_NOT OK) {
-			// 	Response::error(400, 'User lookup failed: ' . $username . ': ' . (string)$sqlUserInfoResponse->status['subcode']);
-			// }
+			if (!$sqlUserInfoResponse) {
+				Response::error(400, 'MSSQL error: User lookup for [' . $username . '] failed: ' . mssql_get_last_message());
+			}
+			$this->_logger('(AFTER)', __LINE__, __FUNCTION__);
 
 			// Ok search, but user does not exist
-			// if(USERNAME_NOT_FOUND) {
-			//	return false;
-			// }
-
-			// Done :-)
-			return array(
-				'username' => $username,
-				'email'    => 'email_from_database'
-			);
+			if(!mssql_num_rows($sqlUserInfoResponse)) {
+				return false;
+			} else {
+				// Safe to assume that only one row was returned, since username is unique.
+				$userObj = mssql_fetch_object($sqlUserInfoResponse);
+				// Done :-)
+				return array(
+					'username' => $userObj->userName,
+					'email'    => $userObj->userEmail
+				);
+			}
 		}
 
 		private function _logger($text, $line, $function) {
