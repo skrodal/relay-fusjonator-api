@@ -29,7 +29,7 @@
 			$query = mssql_query($sql, $this->connection);
 			// On error
 			if($query === false) {
-				Response::error(500, $_SERVER["SERVER_PROTOCOL"] . ' DB query failed (SQL).');
+				Response::error(500, $_SERVER["SERVER_PROTOCOL"] . ' DB query failed (SQL): '  . mssql_get_last_message());
 			}
 			// Response
 			$response = array();
@@ -44,7 +44,6 @@
 			mssql_free_result($query);
 			// Close link
 			$this->closeConnection();
-
 			//
 			return $response;
 		}

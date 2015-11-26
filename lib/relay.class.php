@@ -116,23 +116,18 @@
 				SELECT userName, userEmail
 				FROM tblUser
 				WHERE userName = '$username'");
-
-			// Exit on error
-			if (!$sqlUserInfoResponse) {
-				Response::error(400, 'MSSQL error: User lookup for [' . $username . '] failed: ' . mssql_get_last_message());
-			}
+			// Note: relaySQL will handle any errors with the SQL call.
 			$this->_logger('(AFTER)', __LINE__, __FUNCTION__);
 
 			// Ok search, but user does not exist
-			if(!mssql_num_rows($sqlUserInfoResponse)) {
+			if(empty($sqlUserInfoResponse)) {
 				return false;
 			} else {
 				// Safe to assume that only one row was returned, since username is unique.
-				$userObj = mssql_fetch_object($sqlUserInfoResponse);
 				// Done :-)
 				return array(
-					'username' => $userObj->userName,
-					'email'    => $userObj->userEmail
+					'username' => $sqlUserInfoResponse, // $userObj->userName,
+					'email'    => $sqlUserInfoResponse // $userObj->userEmail
 				);
 			}
 		}
