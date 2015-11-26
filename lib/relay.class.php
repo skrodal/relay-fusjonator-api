@@ -129,8 +129,8 @@
 				// Safe to assume that only one row was returned, since username is unique.
 				// Done :-)
 				return array(
-					'username' => json_encode($sqlUserInfoResponse), // $userObj->userName,
-					'email'    => json_encode($sqlUserInfoResponse) // $userObj->userEmail
+					'username' => $sqlUserInfoResponse['userName'],
+					'email'    => $sqlUserInfoResponse['userEmail']
 				);
 			}
 		}
