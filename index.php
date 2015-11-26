@@ -1,9 +1,9 @@
 <?php
 
 	$FEIDE_CONNECT_CONFIG_PATH = '/var/www/etc/relay-fusjonator/feideconnect_config.js';
-	// $RELAY_CONFIG_PATH         = '/var/www/etc/techsmith-relay/relay_config.js';
+	 $RELAY_CONFIG_PATH         = '/var/www/etc/techsmith-relay/relay_config.js';
 	// TEST CONFIG (OLD DB)
-	$RELAY_CONFIG_PATH         = '/var/www/etc/relay-fusjonator/relay_fusjonator_TEST.js';
+	//$RELAY_CONFIG_PATH         = '/var/www/etc/relay-fusjonator/relay_fusjonator_TEST.js';
 	$API_BASE_PATH             = '/api/relay-fusjonator'; // Remember to update .htacces as well. Same with a '/' at the end...
 
 
