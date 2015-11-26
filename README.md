@@ -32,29 +32,66 @@ Dataflyt mellom `klient`<->`API`<->`Relay` er som følger:
 
 Eksempel med tulle-data for å illustrere første oppslag i API: 
 
-- Karius og Baktus har ingen konto fra før, så vi kan regne med at disse to blir ignorert. 
-- Simon og Renlin har konto og vi kan forvente at nytt brukernavn er ledig.
-- Siste linje vet vi kommer til å skjære seg...
+- Bør Børson har ingen konto fra før, så vi kan regne med at første linje legges i liste over kontoer som kan ignoreres.
+- `simon1@uninett.no` eksisterer, mens `simon1@feide.no` er ledig. Denne kontoen vil legges i liste for migrering.
+- Siste linje vil skjære seg fordi begge kontoer eksisterer - legges i liste over problematiske kontoer.
 
 ```
-     karius@hin.no, karius@uit.no
-     baktus@hin.no, baktus@uit.no
-     simon@uninett.no, simon@uit.no
-     renlin@uninett.no, renlin@uit.no
-     simon@uninett.no, renlin@uninett.no
+    borborson@uninett.no, bor.borson@uninett.no, borborson@feide.no, bor.borson@feide.no
+    simon1@uninett.no, simon.skrodal@uninett.no, simon1@feide.no, simon.skrodal@feide.no
+    renlin@uninett.no, renate.langeland@uninett.no, simon@uninett.no, simon.skrodal@uninett.no
 ```
 
 Svar fra API etter å ha sjekket med Relay DB:
 
-- Første to linjer ble ignorert (de har ikke konto)
-- Neste to linjer er OK - begge brukere har konto og nytt brukernavn er ikke tatt i bruk enda. 
-- Siste linje: kollisjon siden nytt brukernavn allerede er tatt i bruk!
-
-Kun brukere i "ready"-segmentet vil bli sent til API i neste kall for migrering.
-
 ```
-// TODO: Eksempeloutput her
+{
+  "status": true,
+  "data": {
+    "ignore": {
+      "borborson@uninett.no": {
+        "message": "Hopper over siden ingen konto er registrert for dette brukernavnet.",
+        "account_info_current": {
+          "username": "borborson@uninett.no",
+          "email": "bor.borson@uninett.no"
+        },
+        "account_info_new": {
+          "username": "borborson@feide.no",
+          "email": "bor.borson@feide.no"
+        }
+      }
+    },
+    "ok": {
+      "simon1@uninett.no": {
+        "message": "Klar for fusjonering til nytt brukernavn!",
+        "account_info_current": {
+          "username": "simon1@uninett.no",
+          "email": "simon.skrodal@uninett.no"
+        },
+        "account_info_new": {
+          "username": "simon1@feide.no",
+          "email": "simon.skrodal@feide.no"
+        }
+      }
+    },
+    "problem": {
+      "renlin@uninett.no": {
+        "message": "Kan ikke migrere! Nytt brukernavn er allerede blitt tatt i bruk.",
+        "account_info_current": {
+          "username": "renlin@uninett.no",
+          "email": "renate.langeland@uninett.no"
+        },
+        "account_info_new": {
+          "username": "simon@uninett.no",
+          "email": "simon.skrodal@uninett.no"
+        }
+      }
+    }
+  }
+}
 ```
+
+Kun brukere i "ok"-segmentet vil bli sent til API i neste kall for migrering.
 
 
 ### Relatert
