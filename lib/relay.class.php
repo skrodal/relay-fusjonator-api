@@ -129,8 +129,8 @@
 				// Safe to assume that only one row was returned, since username is unique.
 				// Done :-)
 				return array(
-					'username' => $sqlUserInfoResponse['userName'],
-					'email'    => $sqlUserInfoResponse['userEmail']
+					'username' => $sqlUserInfoResponse[0]['userName'],
+					'email'    => $sqlUserInfoResponse[0]['userEmail']
 				);
 			}
 		}
