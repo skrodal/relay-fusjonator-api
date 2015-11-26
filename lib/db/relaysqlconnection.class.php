@@ -52,7 +52,7 @@
 
 			// Close link
 			$this->closeConnection();
-			// 
+			//
 			return $response;
 		}
 
