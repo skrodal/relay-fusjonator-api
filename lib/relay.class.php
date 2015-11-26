@@ -85,13 +85,16 @@
 						// it can make a MERGE request.
 						$responseObj['ok'][$userCurrentAndNew[0]]['message']                      = 'Klar for fusjonering til nytt brukernavn!';
 						$responseObj['ok'][$userCurrentAndNew[0]]['account_info_current']         = $currentLoginInfo;
-						$responseObj['ok'][$userCurrentAndNew[0]]['account_info_new']['username'] = $userCurrentAndNew[1];
+						$responseObj['ok'][$userCurrentAndNew[0]]['account_info_new']['username'] = $userCurrentAndNew[2];
+						$responseObj['ok'][$userCurrentAndNew[0]]['account_info_new']['email']    = $userCurrentAndNew[3];
 					}
 				} // Users with no existing account on the service
 				else {
 					$responseObj['ignore'][$userCurrentAndNew[0]]['message']                          = 'Hopper over siden ingen konto er registrert for dette brukernavnet.';
 					$responseObj['ignore'][$userCurrentAndNew[0]]['account_info_current']['username'] = $userCurrentAndNew[0];
-					$responseObj['ignore'][$userCurrentAndNew[0]]['account_info_new']['username']     = $userCurrentAndNew[1];
+					$responseObj['ignore'][$userCurrentAndNew[0]]['account_info_current']['email']    = $userCurrentAndNew[1];
+					$responseObj['ignore'][$userCurrentAndNew[0]]['account_info_new']['username']     = $userCurrentAndNew[2];
+					$responseObj['ignore'][$userCurrentAndNew[0]]['account_info_new']['email']        = $userCurrentAndNew[3];
 				}
 			}
 
@@ -126,8 +129,8 @@
 				// Safe to assume that only one row was returned, since username is unique.
 				// Done :-)
 				return array(
-					'username' => $sqlUserInfoResponse, // $userObj->userName,
-					'email'    => $sqlUserInfoResponse // $userObj->userEmail
+					'username' => json_encode($sqlUserInfoResponse), // $userObj->userName,
+					'email'    => json_encode($sqlUserInfoResponse) // $userObj->userEmail
 				);
 			}
 		}
