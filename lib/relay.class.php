@@ -167,8 +167,7 @@
 				}
 				// DO username change
 				$usernameUpdateResponse = $this->_changeUsername($userObj['current_username'], $userObj['new_username'], $userObj['new_email']);
-
-				// If yes, we need to do more, otherwise skip to next user
+				// Set response status for this user
 				if($usernameUpdateResponse !== false) {
 					$responseObj['ok'][$userObj['current_username']] ['message']                      = 'Brukernavn fusjonert!';
 					$responseObj['ok'][$userObj['current_username']] ['account_info_old']['username'] = $userObj['current_username'];
@@ -189,7 +188,7 @@
 
 
 		/**
-		 * WRITE OP
+		 * WRITE TO DB
 		 *
 		 * Change username and email
 		 *
@@ -203,7 +202,11 @@
 
 			$this->_logger('(BEFORE)', __LINE__, __FUNCTION__);
 			//Run the update call requested principalId
-			// $sqlChangeUsernameResponse = $this->relaySQL->query('SOME_QUERY_TO_CHANGE_USERNAME_AND_EMAIL');
+			$sqlChangeUsernameResponse = $this->relaySQL->query("
+				UPDATE tblUser
+				SET userName = '$newUsername', userEmail = '$newEmail'
+				WHERE userName = '$oldUsername'");
+
 			$this->_logger('(AFTER)', __LINE__, __FUNCTION__);
 			// Exit on error
 			//if(SQL_QUERY_FAILED) {
@@ -212,7 +215,8 @@
 
 			return array(
 				'username' => $newUsername,
-				'email'    => $newEmail
+				'email'    => $newEmail,
+				'sql_resp' => json_encode($sqlChangeUsernameResponse)
 			);
 
 

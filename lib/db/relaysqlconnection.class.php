@@ -31,13 +31,20 @@
 			if($query === false) {
 				Response::error(500, $_SERVER["SERVER_PROTOCOL"] . ' DB query failed (SQL): '  . mssql_get_last_message());
 			}
-			// Response
-			$response = array();
-			//
-			// Loop rows and add to response array
-			if(mssql_num_rows($query) > 0) {
-				while($row = mssql_fetch_assoc($query)) {
-					$response[] = $row;
+
+
+			// E.g. boolean is returned if no rows (e.g. no resource found or on UPDATE)
+			if($query === true) {
+				$response = $query;
+			} else {
+				// Response
+				$response = array();
+				//
+				// Loop rows and add to response array
+				if(mssql_num_rows($query) > 0) {
+					while($row = mssql_fetch_assoc($query)) {
+						$response[] = $row;
+					}
 				}
 			}
 			// Free the query result
