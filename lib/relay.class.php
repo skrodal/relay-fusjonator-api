@@ -206,9 +206,9 @@
 			// $sqlChangeUsernameResponse = $this->relaySQL->query('SOME_QUERY_TO_CHANGE_USERNAME_AND_EMAIL');
 			$this->_logger('(AFTER)', __LINE__, __FUNCTION__);
 			// Exit on error
-			if(SQL_QUERY_FAILED) {
-				Response::error(400, 'User update failed: ' . $newUsername . ': ' . 'MESSAGE FROM SQL');
-			}
+			//if(SQL_QUERY_FAILED) {
+			//	Response::error(400, 'User update failed: ' . $newUsername . ': ' . 'MESSAGE FROM SQL');
+			//}
 
 			return array(
 				'username' => $newUsername,
