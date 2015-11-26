@@ -74,7 +74,7 @@
 				// If yes, we need to do more, otherwise skip to next user
 				if($currentLoginInfo !== false) {
 					// Check if the new username already has an account
-					$newLoginInfo = $this->_checkUserExists($userCurrentAndNew[1]);
+					$newLoginInfo = $this->_checkUserExists($userCurrentAndNew[2]);
 					// If yes, we have a situation (cannot move old to new, hence old account content will not be merged with new account)
 					if($newLoginInfo !== false) {
 						$responseObj['problem'][$userCurrentAndNew[0]]['message']              = 'Kan ikke migrere! Nytt brukernavn er allerede blitt tatt i bruk.';
