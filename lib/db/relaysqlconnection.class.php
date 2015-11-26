@@ -46,12 +46,13 @@
 						$response[] = $row;
 					}
 				}
+				// Free the query result
+				mssql_free_result($query);
 			}
-			// Free the query result
-			mssql_free_result($query);
+
 			// Close link
 			$this->closeConnection();
-			//
+			// 
 			return $response;
 		}
 
