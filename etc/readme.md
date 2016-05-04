@@ -1,1 +1,1 @@
-Populate fields in config-files and point to their location in index.php -> `$FEIDE_CONNECT_CONFIG_PATH` and `$RELAY_CONFIG_PATH`
+Populate fields in config-files and point to their location in index.php -> `$DATAPORTEN_CONFIG_PATH` and `$RELAY_CONFIG_PATH`

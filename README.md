@@ -1,8 +1,8 @@
 # relay-fusjonator-api
 
-Dette APIet er registrert i UNINETT Connect tjenesteplattform og benyttes av tjeneste "RelayFusjonator".
+Dette APIet er registrert i UNINETTs tjenesteplattform Dataporten og benyttes av tjeneste "RelayFusjonator".
 
-APIet mottar og prosesserer henvendelser fra en `klient` (eks. https://github.com/skrodal/relay-fusjonator-client) registrert i UNINETT Connect tjenesteplattform som har tilgang til dette APIet.
+APIet mottar og prosesserer henvendelser fra en `klient` (eks. https://github.com/skrodal/relay-fusjonator-client) registrert i UNINETT Dataporten som har tilgang til dette APIet.
  
 Dataflyt mellom `klient`<->`API`<->`Relay` er som følger:
 
