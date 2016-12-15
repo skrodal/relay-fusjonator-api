@@ -98,3 +98,6 @@ Kun brukere i "ok"-segmentet vil bli sent til API i neste kall for migrering.
 
 For mer informasjon om APIets funksjon, se https://github.com/skrodal/relay-fusjonator-client. 
 
+## Annet ##
+
+Utviklet av Simon Skrødal for UNINETT
